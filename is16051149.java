@@ -1,11 +1,13 @@
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.util.ArrayList;
+import java.util.Random;
 import java.lang.Exception;
 import java.lang.Math;
-
 
 class is16051149 {
 	public static void main(String[] args) {
@@ -22,10 +24,89 @@ class is16051149 {
 		AdjacencyMatrix ad = AdjacencyMatrix.convertIncidenceMatrix(inc);
 
 		/* write adjacency matrix in ascii representation to output.txt */
-		File output = new File("output.txt");
+		File output = new File("AI16.txt");
 		ad.saveAsciiMatrix(output);
+	
+		/* store the adjacency matrix together with a permutation */
+		GraphRepresentation rep = new GraphRepresentation(ad);
+		/* randomize the ordering */
+		rep.ord.randomize();
+	
+		/* write initial ordering in the same output file */
+		try {
+			FileWriter fw = new FileWriter(output, true);
+			fw.write("\n" + rep.ord.toString() + "\n");
+			fw.close();
+		} catch (IOException e) {
+			System.err.println("Error writing to output file");
+			System.exit(1);
+		}
+	
+		
+		
+		
+		
 	}
 }
+
+
+class GraphRepresentation {
+
+	/* just keep them public to be able to manipulate them more directly */
+	public AdjacencyMatrix mat;
+	public Ordering ord;
+	
+	public GraphRepresentation(AdjacencyMatrix mat) {
+		this.mat = mat;
+		this.ord = new Ordering(mat.getColumns());
+	}
+	
+	public void draw() {
+		
+	}
+	
+	
+}
+
+class Ordering {
+	
+	int[] data;
+	int n; /* size of the data array */
+
+	/* initialise an ascending n-ordering */
+	public Ordering(int n) {
+		this.n = n;
+		data = new int[n];
+		for (int k=0; k<n; k++) {
+			data[k] = k;
+		}
+	}
+
+	public void randomize() {
+		/* seed rng with current time */
+		Random rg = new Random(System.currentTimeMillis());
+		
+		/* this algo is known as fisher-yates shuffle */ 
+		for (int k=n-1; k>0; k--) {
+			int l = rg.nextInt(k+1); /* generate a random integer in [0,k] */
+			int tmp = data[k];
+			data[k] = data[l];
+			data[l] = tmp;
+		}
+	}
+	
+	public String toString() {
+		String s = "[";
+		for(int n : data) {
+			s = s + String.valueOf(n) + ",";
+		}
+		return s + "]";
+	}
+	
+	
+}
+
+
 
 /* General GraphMatrix implementation, provides a quite memory-efficient internal
  * representation of BINARY graph relations, thus not allowing any multi- or hyperedges! */
