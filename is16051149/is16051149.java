@@ -40,7 +40,7 @@ class is16051149 {
 			System.exit(1);
 		}
 		
-		rep.simulated_annealing(rep.ord.n * 2, 0.001, 0, true);
+		rep.simulated_annealing(rep.ord.n, 0.001, 0, true);
 	
 		
 		rep.draw(); //actually not necessary if we call simulated_annealing with draw_progress=true

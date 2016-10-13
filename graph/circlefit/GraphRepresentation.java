@@ -8,7 +8,7 @@ public class GraphRepresentation {
 	/* just keep them public to be able to manipulate them more directly */
 	public AdjacencyMatrix mat;
 	public Ordering ord;
-	private double chunk;
+	double chunk;
 
 	public void simulated_annealing(double temperature, double cr, double min_temp, boolean draw_progress) {
 		ord.randomize(); /* randomize current ordering */
