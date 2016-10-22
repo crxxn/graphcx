@@ -1,4 +1,4 @@
-package graph.algo.viz;
+package graph.algo.vis;
 
 import java.util.Random;
 

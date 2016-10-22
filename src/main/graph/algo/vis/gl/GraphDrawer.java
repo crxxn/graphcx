@@ -1,4 +1,4 @@
-package graph.algo.viz.gl;
+package graph.algo.vis.gl;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
@@ -7,7 +7,7 @@ import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.awt.GLCanvas;
 
 import graph.Edge;
-import graph.algo.viz.Representation;
+import graph.algo.vis.Representation;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;

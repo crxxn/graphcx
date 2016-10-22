@@ -1,10 +1,10 @@
-package graph.algo.viz.circlefit;
+package graph.algo.vis.circlefit;
 
 import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
 
 import graph.Edge;
-import graph.algo.viz.Representation;
+import graph.algo.vis.Representation;
 
 public class Circlefit {
 	

@@ -1,11 +1,11 @@
-package graph.algo.viz.annealing;
+package graph.algo.vis.annealing;
 
 import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
 
-import graph.algo.viz.Representation;
-import graph.algo.viz.circlefit.Circlefit;
-import graph.algo.viz.gl.GraphDrawer;
+import graph.algo.vis.Representation;
+import graph.algo.vis.circlefit.Circlefit;
+import graph.algo.vis.gl.GraphDrawer;
 
 public class Annealer {
 

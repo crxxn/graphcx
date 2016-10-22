@@ -1,9 +1,9 @@
 package demo;
 import java.io.File;
 import graph.*;
-import graph.algo.viz.Representation;
-import graph.algo.viz.annealing.Annealer;
-import graph.algo.viz.circlefit.Circlefit;
+import graph.algo.vis.Representation;
+import graph.algo.vis.annealing.Annealer;
+import graph.algo.vis.circlefit.Circlefit;
 import graph.matrix.IncidenceMatrix;
 
 class Demos {
