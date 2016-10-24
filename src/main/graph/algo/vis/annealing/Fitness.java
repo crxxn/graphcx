@@ -1,4 +1,4 @@
-package graph.algo.vis.circlefit;
+package graph.algo.vis.annealing;
 
 import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
@@ -6,24 +6,13 @@ import java.util.function.ToDoubleFunction;
 import graph.Edge;
 import graph.algo.vis.Representation;
 
-public class Circlefit {
+public class Fitness {
 	
-	public static void layoutCircle(Representation rep) {
-		for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-			double[] coord = new double[2];
-			coord[0] = Math.cos(rep.getChunk()*rep.getOrdering().getData()[i]);
-			coord[1] = Math.sin(rep.getChunk()*rep.getOrdering().getData()[i]);
-			rep.setLayout(i, coord);
-		}
-	}
-	
-	
-	public static Consumer<Representation> mutate = rep -> {
+	public static Consumer<Representation> permute_random = rep -> {
 		rep.getOrdering().mutate();
 	};
 	
-	
-	public static ToDoubleFunction<Representation> fit_EdgeLengthSum = rep -> {
+	public static ToDoubleFunction<Representation> edgeLengthSum = rep -> {
 		double result = 0;
 		double dx = 0;
 		double dy = 0;
@@ -35,7 +24,7 @@ public class Circlefit {
 		return result;
 	};
 
-	public static ToDoubleFunction<Representation> fit_EdgeCrossings = rep -> {
+	public static ToDoubleFunction<Representation> edgeCrossings = rep -> {
 		double result = 0;
 		
 		for (int i=0; i<rep.getGraph().edgeCount(); i++) {
@@ -64,8 +53,7 @@ public class Circlefit {
 				}
 			}
 		}
-//		System.out.println("Intersections: " + result);
-		
+
 		return result;
 	};
 }

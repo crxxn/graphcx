@@ -4,21 +4,20 @@ import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
 
 import graph.algo.vis.Representation;
-import graph.algo.vis.circlefit.Circlefit;
 import graph.algo.vis.gl.GraphDrawer;
 
 public class Annealer {
 
-	public static void anneal(	Representation rep, 
+	public static Representation anneal(	Representation rep, 
 						ToDoubleFunction<Representation> fitness,
 						Consumer<Representation> mutator,
+						Consumer<Representation> layout,
 						double temp, 	//initial temperature
 						double coolingrate,
 						boolean draw) {
 
 		rep.getOrdering().randomize();
-		Circlefit.layoutCircle(rep);
-
+		layout.accept(rep);
 		if (draw) {
 		GraphDrawer gd = GraphDrawer.getInstance(rep);
 		gd.updateData(rep);
@@ -36,7 +35,7 @@ public class Annealer {
 				mutator.accept(tmp_rep);
 			}
 
-			Circlefit.layoutCircle(tmp_rep);
+			layout.accept(tmp_rep);
 		
 			tmp_fit = ((ToDoubleFunction<Representation>)fitness).applyAsDouble(tmp_rep);
 			
@@ -51,6 +50,7 @@ public class Annealer {
 			}
 			temp = temp-coolingrate;
 		}
+		return rep;
 	}
 
 }
