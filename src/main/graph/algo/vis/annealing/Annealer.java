@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 import java.util.function.ToDoubleFunction;
 
 import graph.algo.vis.Representation;
-import graph.algo.vis.gl.GraphDrawer;
+import graph.algo.vis.opengl.GraphDrawer;
 
 public class Annealer {
 

@@ -1,4 +1,4 @@
-package graph.algo.vis.gl;
+package graph.algo.vis.opengl;
 
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;

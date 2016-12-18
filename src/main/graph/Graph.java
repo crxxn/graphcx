@@ -1,9 +1,14 @@
 package graph;
 
+import graph.list.AdjacencyList;
 import graph.list.EdgeList;
 import graph.matrix.*;
 
 public class Graph {
+
+	int v; //number of vertices
+	int e; //number of edges
+
 	private boolean aMatValid = false;
 	AdjacencyMatrix aMat;
 	
@@ -13,8 +18,9 @@ public class Graph {
 	private boolean eListValid = false;
 	EdgeList eList;
 	
-	int v; //number of vertices
-	int e; //number of edges
+	private boolean aListValid = false;
+	AdjacencyList[] aList;
+	
 
 	public Graph(IncidenceMatrix iMat) {
 		this.iMat = iMat;
@@ -31,10 +37,17 @@ public class Graph {
 		return e;
 	}
 	
+	public AdjacencyList[] getAList() {
+		if (!aListValid)
+			aList = AdjacencyList.createAdjacencyLists(this.getAMat());
+		return aList;
+	}
+	
 	public AdjacencyMatrix getAMat() {
 		if (aMatValid) 
 			return aMat;
 
+		//@FIXME
 		//if (iMatValid) {
 			aMat = AdjacencyMatrix.convertIncidenceMatrix(iMat);
 			aMatValid = true;
