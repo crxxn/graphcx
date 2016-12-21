@@ -1,6 +1,32 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+mainClassName = "demo.Demo"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
     testCompile 'junit:junit:4.12'
+    compile group: 'org.la4j', name: 'la4j', version: '0.6.0'
+	compile group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2'
+	compile group: 'org.jogamp.gluegen', name: 'gluegen-rt-main', version: '2.3.2'
+    runtime "org.jogamp.gluegen:gluegen-rt:2.3.2:natives-linux-amd64"
+    runtime "org.jogamp.jogl:jogl-all:2.3.2:natives-linux-amd64"
 }
+
+jar {
+    baseName = "graphcx"
+    version = "0.1.0"
+    
+    manifest {
+        attributes 'Main-Class': 'main.java.demo.Demo'
+    }
+}
+
