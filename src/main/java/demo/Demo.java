@@ -2,6 +2,9 @@ package demo;
 import java.io.File;
 import java.util.Scanner;
 
+import org.la4j.Matrix;
+import org.la4j.Vector;
+
 import graph.*;
 import graph.algo.connectivity.Dijkstra;
 //import graph.algo.connectivity.Paths;
@@ -11,6 +14,7 @@ import graph.algo.vis.annealing.Fitness;
 import graph.algo.vis.annealing.Layout;
 import graph.algo.vis.forcedirected.ForceDirection;
 import graph.algo.vis.opengl.GraphDrawer;
+import graph.algo.vis.sp.SSDE;
 import graph.matrix.IncidenceMatrix;
 
 class Demo {
@@ -20,43 +24,46 @@ class Demo {
 		/* store graph within an encapsulating representation object */
 		Representation rep = new Representation(new Graph(IncidenceMatrix.parseAsciiMatrix(input)), 2);
 
-		/*
-		for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-			System.out.println(Dijkstra.dijkstra(rep.getGraph(), i));
-		}
-		*/
-		Layout.circle.accept(rep);
-		//GraphDrawer g = GraphDrawer.getInstance(rep);
 
-		System.out.println(rep.getGraph().getAMat());
-		/*
-		for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-			System.out.print("Vertex " + i + " has AList " + "[");
-			for (Integer j : rep.getGraph().getAList()[i] ) {
-				System.out.print(j + ", ");
-			}
-			System.out.println("]");
-		}*/
-
-		Dijkstra d = new Dijkstra();
-		for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-			System.out.println("Distances starting from node " + i);
-			
-			Integer[] distances = d.dijkstra(rep.getGraph(), i);
+		SSDE ssde = new SSDE();
 		
-			System.out.print("[");
-			for (int j=0; j<rep.getGraph().vertexCount(); j++) {
-				System.out.print(distances[j] + " ");
-			}
-			System.out.println("]");
+		ssde.ssde(rep, 10, true);
+		
+		rep.normalizeLayout(1.0);
+		
+		GraphDrawer g = GraphDrawer.getInstance(rep);
+		g.updateData(rep);
+		
+		
+		rep.perturbateLayout(0.005);
+
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
+		rep.normalizeLayout(2.0);
+		g.updateData(rep);
+		
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+
 /*		Paths p = new Paths();
 		
 		System.out.println(p.fullDijkstra(rep.getGraph(), 0));
 		System.out.println(p.fullDijkstra(rep.getGraph(), 1));
 		System.out.println(p.fullDijkstra(rep.getGraph(), 2));
 		*/
+
 		//@SuppressWarnings("resource")
 		//Scanner s = new Scanner(System.in);
 		
@@ -67,11 +74,11 @@ class Demo {
 		//s.nextLine();
 		/* Simulated annealing demos */
 		/* circle + edge length */
-		//rep = Annealer.anneal(rep, Fitness.edgeLengthSum, Fitness.permute_random, Layout.circle, rep.getGraph().vertexCount(), 0.001, true);
+		//rep = Annealer.anneal(rep, Fitness.edgeLengthSum, Fitness.permute_random, Layout.circle, rep.getGraph().vertexCount(), 0.1, true);
 		/* circle + #intersections */
 		//rep = Annealer.anneal(rep, Fitness.fit_EdgeCrossings, Fitness.mutate, Layout.circle, rep.getGraph().vertexCount(), 0.0002, true);
 		/* square + edge length */
-		//rep = Annealer.anneal(rep, Fitness.edgeLengthSum, Fitness.permute_random, Layout.square, rep.getGraph().vertexCount(), 0.001, true);
+		//rep = Annealer.anneal(rep, Fitness.edgeLengthSum, Fitness.permute_random, Layout.square, rep.getGraph().vertexCount(), 0.1, true);
 		/* square + #intersections */
 		//rep = Annealer.anneal(rep, Fitness.fit_EdgeCrossings, Fitness.mutate, Layout.square, rep.getGraph().vertexCount(), 0.0002, true);
 		/* Force-direction demos */
@@ -80,8 +87,7 @@ class Demo {
 		//System.out.println("done annealing / press enter to continue to FD");
 		//g.updateData(rep);
 		//s.nextLine();
-		//ForceDirection.forceDirection(rep, 0.03, 0.002, 0.005, true);
 		
-		
+		ForceDirection.forceDirection(rep, 0.003, 0.02, 0.005, true);
 	}
 }
