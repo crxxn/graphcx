@@ -4,7 +4,13 @@ import java.util.ArrayList;
 
 import graph.Graph;
 
-public class Dijkstra {
+public class Dijkstra implements ShortestPath {
+
+	
+	public Integer shortestPath(Graph g, int startVertex, int goalVertex) {
+		
+		return shortestPaths(g, startVertex)[goalVertex];
+	}
 
 	/**
 	 * Dijkstra algorithm implementation
@@ -12,7 +18,7 @@ public class Dijkstra {
 	 * @param startVertex - Vertex with distance 0
 	 * @return Integer[] with distances to all vertices
 	 */
-	public Integer[] dijkstra(Graph g, int startVertex) {
+	public Integer[] shortestPaths(Graph g, int startVertex) {
 		
 		Integer distance[] = new Integer[g.vertexCount()];
 		Integer predecessor[] = new Integer[g.vertexCount()];
