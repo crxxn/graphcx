@@ -1,4 +1,6 @@
 package graph.algo.vis;
+import java.util.Random;
+
 import graph.Graph;
 
 public class Representation {
@@ -22,6 +24,47 @@ public class Representation {
 	public int getDimensions() {
 		return dimensions;
 	}
+
+	
+	/**
+	 * Perturbate a layout where multiple vertices are closer than epsilon
+	 * in the euclidean norm.
+	 */
+	public void perturbateLayout(double delta) {
+		Random r = new Random(System.currentTimeMillis());
+		for (int i=0; i<g.vertexCount(); i++) {
+			for (int j=0; j<dimensions; j++) {
+				Layout[i][j] += delta * (r.nextFloat()-0.5);
+			}
+		}
+	}
+	
+	/*
+	public boolean perturbateDegenerateLayout(double epsilon) {
+
+		//double epsilon = 0.05;
+		boolean dirty = false;
+		Random r = new Random(System.currentTimeMillis());
+
+		for (int i=0; i<g.vertexCount(); i++) {
+			for (int j=0; j<g.vertexCount(); j++) {
+				Double d = 0.0;
+
+				for (int k=0; k<dimensions; k++) {
+					d = d + Math.pow(Layout[i][k]-Layout[j][k], 2);
+				}
+				
+				if (Math.sqrt(d) < epsilon) {
+					for (int k=0; k<dimensions; k++) {
+						Layout[j][k] += r.nextFloat() * epsilon;
+					}
+					dirty = true;
+				}
+			}
+		}
+		return dirty;
+	}*/
+	
 	
 	/* normalize layout to -1/1 viewport coordinates */
 	public void normalizeLayout(double scaleFactor) {
@@ -119,6 +162,9 @@ public class Representation {
 		for (int d=0; d<dimensions; d++) {
 			result += Math.pow(getLayout(i, d)-getLayout(j, d), 2);
 		}
+		if(result == 0) {
+			System.out.println("ZERO!!!");
+		}
 		return Math.sqrt(result);
 	}
 	
@@ -128,6 +174,5 @@ public class Representation {
 		gd.updateData(this);
 	}
 	*/
-	
-	
+
 }
