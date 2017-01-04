@@ -11,215 +11,173 @@ import graph.algo.vis.Representation;
 import org.la4j.Matrix;
 import org.la4j.Vector;
 import org.la4j.decomposition.SingularValueDecompositor;
-import org.la4j.matrix.DenseMatrix;
 import org.la4j.matrix.dense.Basic2DMatrix;
 
 public class SSDE {
+
+	/**
+	 * Sampled Spectral Decomposition Embedding
+	 *  
+	 * @param rep
+	 * @param samples
+	 * @param greedy
+	 */
+	public void ssde(Representation rep, int samples, boolean greedy, int dimensions) {
+
+		int vertices = rep.getGraph().vertexCount();
+		/* Phase 1: Vertex Sampling */
+		// limit #samples to #vertices
+		if (samples > vertices)
+			samples = vertices;
 	
-	
-	public void ssde ( Representation rep, int samples, boolean greedy) {
-		
-		/* step 1, sampling */
-		
-		if (samples > rep.getGraph().vertexCount())
-			samples = rep.getGraph().vertexCount(); //limit samples to vertex count
-		
+		// store samples, vertices are addressed as integers 
 		ArrayList<Integer> sampleValues = new ArrayList<Integer>();
+		Random rng = new Random(System.currentTimeMillis());
 		
-		Random rng = new Random(System.currentTimeMillis()); //seeded rng
-		
-		if (greedy) { // use maximum-distance greedy sampling
-			//FIXME
-			//int s = rng.nextInt(rep.getGraph().vertexCount()); //randomly choosen start node
-			int s = 0;
-			sampleValues.add(s);
-			
-			for (int i=1; i<samples; i++) { //we already have a random initial vertex, so start by 1
+		if (greedy) {
+			// maximum-distance greedy sampling
+			// random start vertex
+			sampleValues.add(rng.nextInt(vertices));
+			// always choose the vertex with the biggest distance to the current sample set
+			for (int i=1; i<samples; i++)
 				sampleValues.add(furthestVertex(rep.getGraph(), sampleValues));
-			}
 
-		} else { //use random sampling
+		} else {
+			// simple random sampling
 			for (int i=0; i<samples; i++) {
+				int s = rng.nextInt(vertices);
+				// avoid collisions - may be inefficient but note that usually #samples << #vertices
+				while (sampleValues.contains(s))
+					s = rng.nextInt(vertices);
 
-				int s = rng.nextInt(rep.getGraph().vertexCount());
-				while(sampleValues.contains(s)) { 
-					 //this may be not the most beautiful collision prevention technique
-					 //but it's sufficient since in practice samples << #nodes
-					s = rng.nextInt(rep.getGraph().vertexCount());
-				}
 				sampleValues.add(s);
 			}
 		}
 		
+		/* Phase 2: Computing the Moore-Penrose pseudo inverse */
 		
-		/* step 2, computing the Moore Penrose pseudo inverse of the sampled square distance matrix */
-		
-		/*
-		System.out.print("Sample values: [");
-		for (int i = 0; i<sampleValues.size(); i++) {
-			System.out.print(sampleValues.get(i) + ", ");
-		}
-		System.out.println("]");
-		*/
-		/*
-		 * C is a #vertices x samples matrix with distance entries
-		 */
-		DenseMatrix C = new Basic2DMatrix(rep.getGraph().vertexCount(), samples);
+		// C is made of column samples of the squared-distances matrix L,
+		// where L_{i,j} = D_{i,j}² = Dijkstra(i, j)²
+		Matrix C = new Basic2DMatrix(vertices, samples);
 		ShortestPath sp = new Dijkstra();
 	
 		
 		for (int i=0; i<samples; i++) {
 			Integer[] distances = sp.shortestPaths(rep.getGraph(), sampleValues.get(i));
-			
-			for (int j=0; j<rep.getGraph().vertexCount(); j++) {
-				C.set(j, i, distances[j]);
-			}
+			for (int j=0; j<vertices; j++)
+				C.set(j, i, Math.pow(distances[j], 2));
 		}
-		
-		//System.out.println(C);
-		
-		/*
-		 * phi is a samples x samples matrix
-		 */
-		DenseMatrix phi = new Basic2DMatrix(samples, samples);
+	
+		// phi is the intersection of C on C' on L
+		Matrix phi = new Basic2DMatrix(samples, samples);
 
 		for (int k=0; k<samples; k++) {
-			for (int j=0; j<samples; j++) {
+			for (int j=0; j<samples; j++)
 				phi.set(k, j,  C.get(sampleValues.get(k), j) );
-			}
 		}
 		
 		SingularValueDecompositor dc = new SingularValueDecompositor(phi);
 		Matrix[] svd = dc.decompose();
 		
-		
-		//Regularization
-		int n = Math.min(svd[1].rows(), svd[1].columns());
+		/* Phase 3: Regularize svd[1] to numerically stabilize the pseudo inverse */
+		int diagonalLength = Math.min(svd[1].rows(), svd[1].columns());
 		
 		Double alpha = svd[1].get(0, 0);
-		for (int i=1; i<n && svd[1].get(i, i) != 0; i++) {
+		for (int i=1; i<diagonalLength && svd[1].get(i, i) != 0; i++) {
 			if (svd[1].get(i, i) > alpha)
 				alpha = svd[1].get(i, i); //find biggest singular value
 		}
 		
 		alpha = Math.pow(alpha, 3);
 		
-		/*
-		System.out.println(svd[0] + "\n");
-		System.out.println(svd[1] + "\n");
-		System.out.println(svd[2] + "\n");
-		*/
-		
-		//System.out.println("alpha: " + alpha);
-
-		for (int i=0; i<n && svd[1].get(i, i) != 0; i++) {
-			
+		/* The Moore-Penrose pseudo inverse of a matrix A with singular value decomposed
+		 * representation BCE is given as E'*pinv(C)*B', where pinv(C) is the diagonal matrix
+		 * given by the svd where all non-zero elements C_ij are the reciprocal 1/C_ij.
+		 * The regularization is given as σ <- σ/(σ²+ alpha/σ²) */
+		for (int i=0; i<diagonalLength && svd[1].get(i, i) != 0; i++) {
 			Double sigma = svd[1].get(i, i);
 			Double regularReciprocal = sigma / (Math.pow(sigma,  2) + alpha /Math.pow(sigma, 2));
 			svd[1].set(i, i, regularReciprocal);
 		}
 		
-		//System.out.println(svd[1] + "\n");
-		
+		// MP pseudo inverse
 		Matrix phiInverse = svd[2].transpose().multiply(svd[1]).multiply(svd[0].transpose());
-		System.out.println(C);
-		System.out.println(phiInverse);
-		Vector[] coordinates = PowerIteration2D(C, phiInverse, Math.pow(10, -7), rep.getGraph().vertexCount());
+
+		// see PowerIteration
+		Vector[] coordinates = PowerIteration(C, phiInverse, Math.pow(10, -7), rep.getGraph().vertexCount(), dimensions);
 		
-		//System.out.println(coordinates[0].length());
-		
-		for(int i=0; i<rep.getGraph().vertexCount(); i++) {
-			
+		// set coordinates as representation layout
+		for(int i=0; i<vertices; i++) {
 			double[] c = {coordinates[0].get(i), coordinates[1].get(i)};
-			//System.out.println("i: " + i + " " + c[0] + " " + c[1]);
 			rep.setLayout(i, c);
 		}
 	}
 
-	public Vector[] PowerIteration2D(Matrix C, Matrix PhiInverse, Double epsilon, int vertices) {
-		Double current = epsilon;
-		Double lambda1, lambda2;
+	/**
+	 * PowerInteration - calculate the d absolutely biggest eigenvalues and corresponding eigenvectors
+	 * of g*C*phiInverse*C'*g to approximate a square-distance matrix L, where Lij = Dij² = dijkstra(i, j).
+	 * @param C
+	 * @param phiInverse
+	 * @param epsilon
+	 * @param vertices
+	 * @param dimensions
+	 * @return
+	 */
+	public Vector[] PowerIteration(Matrix C, Matrix phiInverse, Double epsilon, int vertices, int dimensions) {
+		Random rng = new Random(System.currentTimeMillis());
+
 		Double prev;
-		Random r = new Random(System.currentTimeMillis());
-
-		Vector y1 = Vector.random(vertices, r), y2 = Vector.random(vertices, r);
-		Vector u1, u2;
-
-		//Matrix p = Matrix.identity(vertices).multiply(1/vertices).subtract(Matrix.constant(vertices, vertices, 1));
-		//System.out.println(p);
-		//Matrix M = p.multiply(C).multiply(PhiInverse).multiply(C.transpose()).multiply(p).multiply(-0.5);
+		Double[] lambda = new Double[dimensions];	//eigenvalues
+		Vector[] y = new Vector[dimensions];		//eigenvectors
+		Vector[] u = new Vector[dimensions];		//temporary vectors
+	
+		// initialize eigenvectors randomly
+		for (int i=0; i<dimensions; i++)
+			y[i] = Vector.random(vertices, rng);
 		
-		Matrix M = C.multiply(PhiInverse).multiply(C.transpose());
-		System.out.println(M);
-
-		y1 = y1.divide(y1.norm());
-
-		do {
-			prev = current;
-			u1 = y1;
-
-			//System.out.println(y1);
-			y1 = M.multiply(u1);
-
-			lambda1 = u1.innerProduct(y1);
-			y1 = y1.multiply(1/y1.norm());
-			current = u1.innerProduct(y1);
-			
-		} while (Math.abs(current/prev) > 1+epsilon);
-		
-		current = epsilon;
-		y2 = y2.divide(y2.norm());
-		do {
-			prev = current;
-			u2 = y2;
-			u2 = u2.subtract(u1.multiply(u1.innerProduct(u2)/u1.innerProduct(u1)));
-			y2 = M.multiply(u2);
-			
-			lambda2 = u2.innerProduct(y2);
-
-			y2 = y2.divide(y2.norm());
-			current = u2.innerProduct(y2);
-
-		} while (Math.abs(current/prev) > 1+epsilon);
+		// projection matrix
+		Matrix g = Matrix.identity(vertices).subtract(Matrix.constant(vertices, vertices, 1/vertices));
+		Matrix M = C.multiply(phiInverse).multiply(C.transpose());
+		Matrix L = g.multiply(M).multiply(g).multiply(-0.5);
 
 		
-		Vector[] result = new Vector[2];
-		System.out.println("lambda1: " + lambda1 + " lambda2: " + lambda2);
-		/*
-		System.out.println("y1.length: " + y1.length());
-		System.out.println("sqrt(lambda1)" + Math.sqrt(lambda1));
-		System.out.println(y1.multiply(Math.sqrt(lambda1)));
-		System.out.println("####");
-		System.out.println("y2.length: " + y2.length());
-		System.out.println("sqrt(lambda2)" + Math.sqrt(lambda2));
-		System.out.println(y2);
+		for (int i=0; i<dimensions; i++) {
+			Double current = epsilon;
+			do {
+				prev = current;
+				u[i] = y[i];
+				Vector ortho = Vector.constant(vertices, 0.0);
+
+				// no need to divide by <u[k], u[k]>, as all previous vectors have unit length
+				for (int k=0; k<i; k++)
+					ortho = ortho.subtract(u[k].multiply(u[k].innerProduct(u[i])));
+
+				//orthogonalize u[i] against u[0],...,u[k]
+				u[i] = u[i].subtract(ortho);
+				y[i] = L.multiply(u[i]);
+				lambda[i] = u[i].innerProduct(y[i]);
+				y[i] = y[i].divide(y[i].norm());
+				current = u[i].innerProduct(y[i]);
+			} while (Math.abs(current/prev) > 1+epsilon);
+		}
+
+		for (int i=0; i<dimensions; i++)
+			y[i] = y[i].divide(Math.sqrt(Math.abs(lambda[i])));
 		
-		System.out.println(y1.get(0));
-		System.out.println(y1.get(1));
-
-		System.out.println(y2.get(0));
-		System.out.println(y2.get(1));
-		 */
-
-		result[0] = y1;
-		result[1] = y2;
-			
-		System.out.println("result:" + result[0]);
-		System.out.println("result:" + result[1]);
-		return result;
+		return y;
 	}
-	
-	
-	
+
+	/**
+	 * @param g Graph on which this algorithm is run.
+	 * @param sampleValues already chosen vertices.
+	 * @return a vertex with the highest graphtheoretical distance to the current sampleValues.
+	 */
 	private int furthestVertex(Graph g, ArrayList<Integer> sampleValues) {
-		//System.out.println("entering furthestVertex()");
 		Dijkstra d = new Dijkstra();
 		ArrayList<Integer[]> distances = new ArrayList<Integer[]>();
-		//System.out.println("sampleValues.size(): " + sampleValues.size());
 		
-		for(Integer i : sampleValues) {
+		for (Integer i : sampleValues)
 			distances.add(d.shortestPaths(g, i));
-		}
 		
 		int result=0; //index of the currently furthest node from sampleValues
 		int minimumDistance = 0;
@@ -229,17 +187,14 @@ public class SSDE {
 			tmpDistance = distances.get(0)[i];
 			
 			for (int j=1; j<sampleValues.size(); j++) {
-				if (distances.get(j)[i] < tmpDistance) {
+				if (distances.get(j)[i] < tmpDistance)
 					tmpDistance = distances.get(j)[i];
-				}
 			}
 			if (tmpDistance > minimumDistance) {
 				minimumDistance = tmpDistance;
 				result = i;
 			}
 		}
-		//System.out.println("Choose node " + result + " with distance " + minimumDistance);
 		return result;
 	}
-	
 }
