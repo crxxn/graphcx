@@ -58,7 +58,7 @@ public class Dijkstra implements ShortestPath {
 	 * @param distance array of so-far minimal distances, -1 == infinity
 	 * @return index of QUEUE entry [NOT vertex index!] with minimal distance
 	 */
-	private static int minDistance(ArrayList<Integer> queue, Integer[] distance) {
+	private int minDistance(ArrayList<Integer> queue, Integer[] distance) {
 		int i=0;
 		// skip infinity placeholders
 		while(distance[queue.get(i)] == -1)
