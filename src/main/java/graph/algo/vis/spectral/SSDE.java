@@ -1,4 +1,4 @@
-package graph.algo.vis.sp;
+package graph.algo.vis.spectral;
 
 import java.util.ArrayList;
 import java.util.Random;
