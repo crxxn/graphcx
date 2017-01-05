@@ -7,9 +7,9 @@ public class Representation {
 
 	private Graph g;
 	private Ordering ord;
-	private double chunk;
+	private float chunk;
 	private int dimensions;
-	private double[][] Layout;
+	private float[][] Layout;
 
 
 	public Ordering getOrdering() {
@@ -18,7 +18,7 @@ public class Representation {
 	public Graph getGraph() {
 		return g;
 	}
-	public double getChunk() {
+	public float getChunk() {
 		return chunk;
 	}
 	public int getDimensions() {
@@ -39,37 +39,10 @@ public class Representation {
 		}
 	}
 	
-	/*
-	public boolean perturbateDegenerateLayout(double epsilon) {
-
-		//double epsilon = 0.05;
-		boolean dirty = false;
-		Random r = new Random(System.currentTimeMillis());
-
-		for (int i=0; i<g.vertexCount(); i++) {
-			for (int j=0; j<g.vertexCount(); j++) {
-				Double d = 0.0;
-
-				for (int k=0; k<dimensions; k++) {
-					d = d + Math.pow(Layout[i][k]-Layout[j][k], 2);
-				}
-				
-				if (Math.sqrt(d) < epsilon) {
-					for (int k=0; k<dimensions; k++) {
-						Layout[j][k] += r.nextFloat() * epsilon;
-					}
-					dirty = true;
-				}
-			}
-		}
-		return dirty;
-	}*/
-	
-	
 	/* normalize layout to -1/1 viewport coordinates */
-	public void normalizeLayout(double scaleFactor) {
-		double[] max = new double[dimensions];
-		double[] min = new double[dimensions];
+	public void normalizeLayout(float scaleFactor) {
+		float[] max = new float[dimensions];
+		float[] min = new float[dimensions];
 		
 		/* search maxima / minima */
 		for(int d=0; d<dimensions; d++) {
@@ -88,7 +61,7 @@ public class Representation {
 		
 		/* translate vertices to the coordinate origin */
 		for (int i=0; i<g.vertexCount(); i++) {
-			double[] coords = new double[dimensions];
+			float[] coords = new float[dimensions];
 			for (int d=0; d<dimensions; d++) {
 				coords[d] = getLayout(i,d) - min[d];
 			}
@@ -97,21 +70,21 @@ public class Representation {
 
 		
 		
-		double scale = max[0] - min[0];
+		float scale = max[0] - min[0];
 		for (int d=1; d<dimensions; d++) {
 			if (max[d] - min[d] > scale)
 				scale = max[d] - min[d];
 		}
 		
 		for (int i=0; i<g.vertexCount(); i++) {
-			double[] coords = new double[dimensions];
+			float[] coords = new float[dimensions];
 			for (int d=0; d<dimensions; d++) {
 				coords[d] = scaleFactor * getLayout(i,d) / scale; //normalization for viewport
 			}
 			setLayout(i,coords);
 		}
 		
-		double[] avg = new double[dimensions];
+		float[] avg = new float[dimensions];
 		for (int i=0; i<g.vertexCount(); i++) {
 			for (int d=0; d<dimensions; d++) {
 				avg[d] += getLayout(i,d);
@@ -123,7 +96,7 @@ public class Representation {
 		}
 	
 		for (int i=0; i<g.vertexCount(); i++) {
-			double[] coords = new double[dimensions];
+			float[] coords = new float[dimensions];
 			for (int d=0; d<dimensions; d++) {
 				coords[d] = getLayout(i,d) - avg[d];
 			}
@@ -136,24 +109,24 @@ public class Representation {
 		this.ord = new Ordering(r.ord);
 		this.chunk = r.chunk;
 		this.dimensions = dimensions;
-		this.Layout = new double[g.vertexCount()][dimensions];
+		this.Layout = new float[g.vertexCount()][dimensions];
 	}
 	
 	public Representation (Graph g, int dimensions) {
 		this.g = g;
 		this.ord = new Ordering(g.vertexCount());
-		this.chunk = 2 * Math.PI / g.vertexCount();
+		this.chunk = (float) (2 * Math.PI / g.vertexCount());
 		this.dimensions = dimensions;
-		this.Layout = new double[g.vertexCount()][dimensions];
+		this.Layout = new float[g.vertexCount()][dimensions];
 	}
 	
-	public void setLayout(int vertex, double[] coordinates) {
+	public void setLayout(int vertex, float[] coordinates) {
 		for (int i=0; i<dimensions; i++) {
 			this.Layout[vertex][i] = coordinates[i];
 		}
 	}
 	
-	public double getLayout(int vertex, int component) {
+	public float getLayout(int vertex, int component) {
 		return Layout[vertex][component];
 	}
 	
@@ -167,12 +140,4 @@ public class Representation {
 		}
 		return Math.sqrt(result);
 	}
-	
-	/*
-	public void draw() {
-		GraphDrawer gd = GraphDrawer.getInstance();
-		gd.updateData(this);
-	}
-	*/
-
 }

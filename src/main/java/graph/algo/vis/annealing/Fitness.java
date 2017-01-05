@@ -6,12 +6,21 @@ import java.util.function.ToDoubleFunction;
 import graph.Edge;
 import graph.algo.vis.Representation;
 
+/**
+ * A collection of fitness functions and mutators to be used with simulated annealing
+ */
 public class Fitness {
-	
+
+	/**
+	 * randomly mutates an ordering
+	 */
 	public static Consumer<Representation> permute_random = rep -> {
 		rep.getOrdering().mutate();
 	};
-	
+
+	/**
+	 * sum of two dimensional euclidean distances between adjacent vertices
+	 */
 	public static ToDoubleFunction<Representation> edgeLengthSum = rep -> {
 		double result = 0;
 		double dx = 0;
@@ -24,6 +33,9 @@ public class Fitness {
 		return result;
 	};
 
+	/**
+	 * number of intersecting edges on a circular layout, making use of the ordering
+	 */
 	public static ToDoubleFunction<Representation> edgeCrossings = rep -> {
 		double result = 0;
 		
