@@ -108,7 +108,7 @@ public class SSDE {
 		
 		// set coordinates as representation layout
 		for(int i=0; i<vertices; i++) {
-			double[] c = {coordinates[0].get(i), coordinates[1].get(i)};
+			float [] c = {(float) coordinates[0].get(i), (float) coordinates[1].get(i)};
 			rep.setLayout(i, c);
 		}
 	}
