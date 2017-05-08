@@ -130,14 +130,14 @@ public class Representation {
 		return Layout[vertex][component];
 	}
 	
-	public double distance(int i, int j) {
-		double result = 0;
+	public float distance(int i, int j) {
+		float result = 0;
 		for (int d=0; d<dimensions; d++) {
 			result += Math.pow(getLayout(i, d)-getLayout(j, d), 2);
 		}
 		if(result == 0) {
 			System.out.println("ZERO!!!");
 		}
-		return Math.sqrt(result);
+		return (float) Math.sqrt(result);
 	}
 }

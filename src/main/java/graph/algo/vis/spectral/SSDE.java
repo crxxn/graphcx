@@ -81,7 +81,21 @@ public class SSDE {
 		
 		/* Phase 3: Regularize svd[1] to numerically stabilize the pseudo inverse */
 		int diagonalLength = Math.min(svd[1].rows(), svd[1].columns());
+
+/*
+		System.out.println("Phi: ");
+		System.out.println(phi);
+	
+		System.out.println("svd[0]");
+		System.out.println(svd[0]);
+		System.out.println("svd[1]");
+		System.out.println(svd[1]);
+		System.out.println("svd[2]");
+		System.out.println(svd[2]);
 		
+		System.out.println("svd[0]*svd[1]*svd[2]");
+		System.out.println(svd[0].multiply(svd[1]).multiply(svd[2].transpose()));
+*/
 		Double alpha = svd[1].get(0, 0);
 		for (int i=1; i<diagonalLength && svd[1].get(i, i) != 0; i++) {
 			if (svd[1].get(i, i) > alpha)
@@ -101,16 +115,74 @@ public class SSDE {
 		}
 		
 		// MP pseudo inverse
-		Matrix phiInverse = svd[2].transpose().multiply(svd[1]).multiply(svd[0].transpose());
+		Matrix phiInverse = svd[2].multiply(svd[1]).multiply(svd[0].transpose());
 
-		// see PowerIteration
-		Vector[] coordinates = PowerIteration(C, phiInverse, Math.pow(10, -7), rep.getGraph().vertexCount(), dimensions);
+
+/*
+		System.out.println("Inverse check:");
+		System.out.println(phiInverse.multiply(phi));
+*/
+		// see powerIteration
+		Vector[] coordinates = powerIteration(C, phiInverse, Math.pow(10, -7), rep.getGraph().vertexCount(), dimensions);
 		
 		// set coordinates as representation layout
 		for(int i=0; i<vertices; i++) {
 			float [] c = {(float) coordinates[0].get(i), (float) coordinates[1].get(i)};
 			rep.setLayout(i, c);
 		}
+		
+		
+		
+		
+		/* TESTING ONLY */
+		
+		/*
+		Matrix L = Matrix.constant(vertices, vertices, 0);
+		Matrix approx = Matrix.constant(vertices, dimensions, 0);
+
+		for (int i=0; i<vertices; i++) {
+			Integer[] d = sp.shortestPaths(rep.getGraph(), i);
+			for (int j=0; j<vertices; j++) {
+				L.set(i, j, Math.pow(d[j], 2));
+			}
+		}
+
+		System.out.println("L: ");
+		System.out.println(L);
+		
+		for (int i=0; i<vertices; i++) {
+			for (int j=0; j<dimensions; j++) {
+				approx.set(i, j, coordinates[j].get(i));
+			}
+		}
+
+		approx = approx.multiply(approx.transpose());
+		System.out.println("approx: ");
+		System.out.println(approx);
+		
+		Matrix error = L.subtract(approx.multiply(approx.transpose()));
+	
+		System.out.println("error: ");
+		System.out.println(error);
+		
+		Matrix fact = Matrix.constant(vertices,  vertices,  0);
+		double avg = 0;
+		for (int i=0; i<vertices; i++) {
+			for (int j=0; j<vertices; j++) {
+				fact.set(i, j, L.get(i, j)/error.get(i, j));
+				avg = avg + L.get(i, j)/error.get(i, j);
+			}
+		}
+		avg = avg / Math.pow(vertices, 2);
+		
+		
+		
+		System.out.println("fact: ");
+		System.out.println(fact);
+		
+		System.out.println("adapted: ");
+		System.out.println(L.subtract(error.multiply(avg)));
+		*/
 	}
 
 	/**
@@ -123,7 +195,7 @@ public class SSDE {
 	 * @param dimensions
 	 * @return
 	 */
-	public Vector[] PowerIteration(Matrix C, Matrix phiInverse, Double epsilon, int vertices, int dimensions) {
+	public Vector[] powerIteration(Matrix C, Matrix phiInverse, Double epsilon, int vertices, int dimensions) {
 		Random rng = new Random(System.currentTimeMillis());
 
 		Double prev;
@@ -150,7 +222,7 @@ public class SSDE {
 
 				// no need to divide by <u[k], u[k]>, as all previous vectors have unit length
 				for (int k=0; k<i; k++)
-					ortho = ortho.subtract(u[k].multiply(u[k].innerProduct(u[i])));
+					ortho = ortho.add(u[k].multiply(u[k].innerProduct(u[i])));
 
 				//orthogonalize u[i] against u[0],...,u[k]
 				u[i] = u[i].subtract(ortho);
@@ -161,8 +233,10 @@ public class SSDE {
 			} while (Math.abs(current/prev) > 1+epsilon);
 		}
 
-		for (int i=0; i<dimensions; i++)
+		for (int i=0; i<dimensions; i++) {
+			System.out.println("lambda[" + i + "]=" + lambda[i]);
 			y[i] = y[i].divide(Math.sqrt(Math.abs(lambda[i])));
+		}
 		
 		return y;
 	}

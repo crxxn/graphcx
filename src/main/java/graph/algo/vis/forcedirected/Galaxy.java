@@ -4,79 +4,69 @@ import graph.algo.vis.Representation;
 import graph.algo.vis.opengl.GraphDrawer;
 import graph.matrix.AdjacencyMatrix;
 
-public class ForceDirection {
-	
-	public static void forceDirection(	Representation rep,
-										double edgeAttraction,
-										double vortexRepulsion,
-										double averageTreshold,
-										boolean draw
+public class Galaxy {
+
+	/**
+	 *
+	 * @param rep
+	 * @param edgeAttraction
+	 * @param vortexRepulsion
+	 * @param iterations
+	 * @param draw
+	 */
+	public void galaxy(	Representation rep,
+						double edgeAttraction,
+						double vortexRepulsion,
+						int iterations,
+						boolean draw
 						) {
 
-		double average = 0;
 		AdjacencyMatrix aMat = rep.getGraph().getAMat();
-		
-		//FIXME remove 
+		int vertices = rep.getGraph().vertexCount();
 
-		do {
-			double[][] forces = new double[rep.getGraph().vertexCount()][rep.getDimensions()];
-			average = 0;
+		for (int k=0; k<iterations; k++) {
+
+			float[][] forces = new float[vertices][rep.getDimensions()];
 			
+			float cooling = (float)(iterations-k)/(float)iterations;
 			/* calculate forces on every vertex */
-			for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-				for (int j=0; j<rep.getGraph().vertexCount(); j++) {
+			for (int i=0; i<vertices; i++) {
+				for (int j=0; j<vertices; j++) {
 					
 					if (i==j)
 						continue;
 
-					//System.out.println("calculating forces for "+ i + "," + j);
-					for (int d=0; d<rep.getDimensions(); d++) {
-						/* pay attention to the += */
-						forces[i][d] +=  - vortexRepulsion * (rep.getLayout(j, d) - rep.getLayout(i, d))/rep.distance(i, j);
-					}
-					
-					/* edge attraction */
+					// vortex repulsion
+					for (int d=0; d<rep.getDimensions(); d++)
+						forces[i][d] +=  cooling * vortexRepulsion * (rep.getLayout(i, d) - rep.getLayout(j, d)) / rep.distance(i, j);
+
+					// edge attraction
 					if (aMat.get(i, j) == 1) {
-						for(int d=0; d<rep.getDimensions(); d++) {
-							/* pay attention to the += */
-							forces[i][d] +=  edgeAttraction * (rep.getLayout(j, d) - rep.getLayout(i, d));
-							
-						}
+						for(int d=0; d<rep.getDimensions(); d++)
+							forces[i][d] += cooling * edgeAttraction * (rep.getLayout(j, d) - rep.getLayout(i, d));
 					}
 				}
 			}
 
 
 			/* apply forces */
-			for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-				double[] coordinates = new double[rep.getDimensions()];
-				for (int d=0; d<rep.getDimensions(); d++) {
+
+			for (int i=0; i<vertices; i++) {
+				float[] coordinates = new float[rep.getDimensions()];
+
+				for (int d=0; d<rep.getDimensions(); d++)
 					coordinates[d] = rep.getLayout(i, d) + forces[i][d];
-				}
-				//System.out.println("i-forces: (" + forces[i][0] + "," + forces[i][1] + ")");
+
 				rep.setLayout(i, coordinates);
 			}
-			
-			/* calculate average force */
-			for (int i=0; i<rep.getGraph().vertexCount(); i++) {
-				double tmp = 0;
-				for (int d=0; d<rep.getDimensions(); d++) {
-					tmp = tmp + Math.pow(forces[i][d], 2);
-				}
-				average = average + Math.sqrt(tmp);
-			}
-			average = average / rep.getGraph().vertexCount();
-			
-			rep.normalizeLayout(1.5);
+	
+			rep.normalizeLayout(1.5f);
 
 			if(draw) {
 				GraphDrawer gd = GraphDrawer.getInstance(rep);
 				gd.updateData(rep);
 			}
-			
-			System.out.println("average force: " + average);
-			
-		} while(average > averageTreshold );
+		}
 	} 
 	
 }

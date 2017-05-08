@@ -128,7 +128,7 @@ class GraphViz {
 		float z2 = 0f;
 
 		if (rep.getDimensions() == 3) {
-			z1 = scale* (float)rep.getLayout(e.getVertex(0), 2);
+			z1 = scale* rep.getLayout(e.getVertex(0), 2);
 			z2 = scale* (float)rep.getLayout(e.getVertex(1), 2);
 		} 
 

@@ -12,7 +12,7 @@ public class IncidenceMatrix extends GraphMatrix {
 	}
 	
 	/* parse incidence matrix from the given input file */
-	public static IncidenceMatrix parseAsciiMatrix(File file) {
+	public static IncidenceMatrix parseAsciiMatrix(File file, boolean transposed) {
 		ArrayList<ArrayList<Character>> data = new ArrayList<ArrayList<Character>>();
 		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 			for(String line; (line = br.readLine()) != null; ) {
@@ -36,6 +36,11 @@ public class IncidenceMatrix extends GraphMatrix {
 				System.err.println("Exception: " + e.getMessage());
 				System.exit(1);
 		}	
+		
+		if (transposed) {
+			ArrayList<ArrayList<Character>> t = new ArrayList<ArrayList<Character>>();
+			//FIXME
+		}
 
 		/* Done parsing, perform sanity check */		
 		sanityCheck(data);
@@ -45,6 +50,8 @@ public class IncidenceMatrix extends GraphMatrix {
 
 		IncidenceMatrix result = new IncidenceMatrix(nodes, edges);
 		/* copy data in memory efficient byte matrix */
+		
+		
 		for (int k=0; k<nodes; k++) {
 			for (int l=0; l<edges; l++){
 				/* just set the 1's, as the array is initialized with zeros */
@@ -53,6 +60,7 @@ public class IncidenceMatrix extends GraphMatrix {
 				} 
 			}
 		}
+
 		return result;
 	}
 
